@@ -1,28 +1,19 @@
-const express = require('express');
-const app = express();
+// API
+const crypto = require('crypto');
+const CHAVE = 'sua-chave-secreta-aqui';
 
-const PORT = process.env.PORT || 10000;
-const SECRET_HEADER = 'X-Lua-Auth';
-const SECRET_VALUE = 'nao_abre_no_navegador_2026';
-
-const LOADER_OCULTO = `loadstring(game:HttpGet("https://raw.githubusercontent.com/mighuelfreitas40-sys/Loader/refs/heads/main/NovoAprendiz"))()`;
+function criptografar(texto) {
+    const cipher = crypto.createCipher('aes-256-cbc', CHAVE);
+    let cripto = cipher.update(texto, 'utf8', 'hex');
+    cripto += cipher.final('hex');
+    return cripto;
+}
 
 app.get('/api/script', (req, res) => {
-    const auth = req.headers[SECRET_HEADER.toLowerCase()];
+    const auth = req.headers['x-lua-auth'];
+    if (auth !== 'valor-secreto') return res.status(403).send('Negado');
 
-    if (auth !== SECRET_VALUE) {
-        return res.status(403).send('Acesso negado.');
-    }
-
+    const loaderCripto = criptografar(LOADER_OCULTO);
     res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('Cache-Control', 'no-store');
-    res.send(LOADER_OCULTO);
-});
-
-app.get('/', (req, res) => {
-    res.status(200).send('OK');
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+    res.send(loaderCripto);
 });
