@@ -2,15 +2,19 @@ const express = require('express');
 const app = express();
 
 const PORT = process.env.PORT || 10000;
-const SECRET_HEADER = 'X-Lua-Auth';
-const SECRET_VALUE = 'nao_abre_no_navegador_2026';
 
 const LOADER_OCULTO = `loadstring(game:HttpGet("https://raw.githubusercontent.com/mighuelfreitas40-sys/Loader/refs/heads/main/NovoAprendiz"))()`;
 
 app.get('/api/script', (req, res) => {
-    const auth = req.headers[SECRET_HEADER.toLowerCase()];
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
 
-    if (auth !== SECRET_VALUE) {
+    // Executores Lua geralmente nao tem User-Agent padrao de navegador
+    // ou tem algo muito generico. Bloqueia navegadores conhecidos.
+    const navegadores = ['chrome', 'firefox', 'safari', 'edge', 'opera', 'curl', 'wget', 'postman', 'insomnia', 'python', 'java', 'node'];
+
+    const isNavegador = navegadores.some(n => userAgent.includes(n));
+
+    if (isNavegador) {
         return res.status(403).send('Acesso negado.');
     }
 
